@@ -4,16 +4,11 @@ import sys
 from os import path
 from subprocess import call
 
-if(len(sys.argv)==2):
-	file_name					=	sys.argv[1]
-elif(len(sys.argv)==1):
-	file_name					=	raw_input(".hdr_File: ")
+file_name	=	sys.argv[1]
+if(len(sys.argv)==3):
+	j		=	int(sys.argv[2])
 else:
-	print("Too many arguments. Enter only .hdr_File name.")
-	exit()
-
-j			=	int(file_name[-7:-4])
-file_name	=	file_name[:-8]
+	j		=	0
 
 while(j<999):
 	j_d		=	j/10
@@ -31,6 +26,8 @@ while(j<999):
 	i		=	0
 	size 	=	path.getsize(file_name+s+".mbr")
 
+	print size
+
 	mbr		=	open(file_name+s+".mbr","rb")
 	hdr		=	open(file_name+s+".hdr","wb")
 	while (i < size):
@@ -44,7 +41,7 @@ while(j<999):
 	print ".mbr File Size:		", float(size)/(1024*1024*1024), "GB"
 	print ".hdr File Size:		", float(path.getsize(file_name+s+".hdr"))/1024/1024, "MB"
 	print "\n"
-	print "\t---Info---"
-	call(["python","hdr_info.py",file_name+s+".hdr"])
+	print "     ---Info---"
+	call(["python","hdr_info2.py",file_name+s+".hdr"])
 
 

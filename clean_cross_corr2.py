@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import os
 
 def amplitude(a):
-	a							=	(a.imag**2+a.real**2)**0.5
-	return a
+	b							=	(a.imag**2+a.real**2)**0.5
+	return b
 
 def mean(a):
 	mean_a						=	np.zeros(256)
@@ -90,12 +90,11 @@ for i in range(i_n):
 		for j in range(256):
 			XY[i][j]	=	ARR[(i*256)+j]
 
-fig1	=	plt.figure(1)
-plt.imshow(XY.real.T,interpolation='bilinear',aspect='auto')
-plt.ylabel('XY')
-fig1.savefig(file_name[:-4]+'_im(clean).png')
+#plt.imshow(XY.real.T,interpolation='bilinear',aspect='auto')
+plt.imshow(XY.imag.T,interpolation='bilinear',aspect='auto')
 plt.show()
 exit()
+
 
 XY_m	=	mean(XY)
 
@@ -104,9 +103,14 @@ R_XY	=	reject_matrix(XY_m,n_s)
 reject(R_XY,XY)
 
 fig1	=	plt.figure(1)
-plt.imshow(XY.real.T,interpolation='bilinear',aspect='auto')
+plt.imshow((XY.real.T),interpolation='bilinear',aspect='auto')
 plt.ylabel('XY')
-fig1.savefig(file_name[:-4]+'_im(clean).png')
+fig1.savefig(file_name[:-4]+'_im_real(clean).png')
+
+fig2	=	plt.figure(2)
+plt.imshow((XY.imag.T),interpolation='bilinear',aspect='auto')
+plt.ylabel('XY')
+fig1.savefig(file_name[:-4]+'_im_imag(clean).png')
 
 fig11	=	plt.figure(11)
 plt.plot(amplitude(XY_m))

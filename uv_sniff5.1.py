@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-#UV_sampling_final
-#Author: Harsh_Grover
+# UV_sampling_final with support for active dases.
+# Author: Harsh_Grover
 
 import numpy as np
 import sys
@@ -148,6 +148,9 @@ y[7]	=	53.8
 Baseline	=	np.zeros((8,8))
 Gamma		=	np.zeros((8,8))
 
+das_a = map(int,raw_input('Enter active dases: ').split())
+lda	=	len(das_a)
+
 if(not(isfile('Baseline.txt') or not(isfile('Gamma.txt')))):
 	call(['./coord2.py'])
 
@@ -175,19 +178,6 @@ if(mode==3):
 	ofname	=	sys.argv[4]+'_'+date.replace('/','')+'_'+ut+'_'+sys.argv[3]
 
 else:
-	z_ctr1	=	0
-	if(mode==1):
-		f1	=	open(file_name,'rb')
-		z_flag	=	1
-		z_ctr1	=	-1
-		while(z_flag):
-			f1.read(28)
-			p_s	=	int(f1.read(4).encode('hex'),16)
-			f1.read(1024)
-			z_ctr1	+=	1
-			if(p_s==0):
-				z_flag	=	0
-		f1.close()
 
 	ofname	=	file_name[:-8]
 
@@ -221,7 +211,7 @@ else:
 
 	UT			=	time_hr+float(time_min)/60+float(time_s)/3600
 	gps			=	[]
-	if(mode==4):
+	if(mode==1):
 		jn		=	int(input('Start_file: '))
 	else:
 		jn			=	0
@@ -270,8 +260,8 @@ else:
 		for i in range(l):
 			gps[i]	-=	g0
 
-u			=	np.zeros((8*7,l))
-v			=	np.zeros((8*7,l))
+u			=	np.zeros((lda,l))
+v			=	np.zeros((lda,l))
 #w			=	np.zeros((8*7,l))
 N			=	np.zeros(3)
 N[1]		=	1
@@ -362,8 +352,8 @@ for i in range(l):
 uv	=	np.zeros((240,240))
 
 ctr			=	0
-for das_id_1 in range(8):
-	for das_id_2 in range(8):
+for das_id_1 in das_a:
+	for das_id_2 in das_a:
 		if(das_id_1!=das_id_2):
 			a[0]		=	x[das_id_1]-x[das_id_2]
 			a[1]		=	y[das_id_1]-y[das_id_2]
@@ -386,7 +376,7 @@ for das_id_1 in range(8):
 				v[ctr][i]	=	np.dot(v_a,T)
 				uv[int(u[ctr][i])+120][int(v[ctr][i])+120]	=	1
 			ctr			+=	1
-			print ctr,'/56'
+			print(str(ctr)+'/'+str(lda*(lda-1)))
 
 dirty	=	np.fft.fft2(uv)
 dirty_c	=	np.fft.fftshift(dirty)
@@ -395,66 +385,77 @@ dirty_i_c	=	np.fft.fftshift(dirty_i)
 
 print('Saving Results')
 
-fw	=	open(os.getcwd()+'/'+ofname+'_uv5.txt',"w+")
-fw.write(str(l))
-fw.write('\n')
-for i in range(l):
-	for j in range(ctr):
-		fw.write(str(u[j][i]))
-		fw.write(' ')
-	fw.write('\n')
-for i in range(l):
-	for j in range(ctr):
-		fw.write(str(v[j][i]))
-		fw.write(' ')
-	fw.write('\n')
+cwd			=	os.getcwd()
+str_das_a	=	map(str,das_a)
+dirname		=	ofname+'_'+'_'.join(str_das_a)
+if not os.path.exists(dirname):
+	os.makedirs(dirname)
+
+u_t		=	Table(u)
+u_t.write(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_5.1(U).txt',format='ascii.no_header',overwrite='true')
+v_t		=	Table(v)
+v_t.write(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_5.1(V).txt',format='ascii.no_header',overwrite='true')
+
+#fw	=	open(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1.txt',"w+")
+#fw.write(str(l))
+#fw.write('\n')
+#for i in range(l):
+#	for j in range(ctr):
+#		fw.write(str(u[j][i]))
+#		fw.write(' ')
+#	fw.write('\n')
+#for i in range(l):
+#	for j in range(ctr):
+#		fw.write(str(v[j][i]))
+#		fw.write(' ')
+#	fw.write('\n')
 
 fig1=plt.figure()
-for i in range(56):
+for i in range(lda):
 	plt.plot(u[i],v[i],color='k')
 plt.xlabel('U')
 plt.ylabel('V')
 plt.axis([-125, 125, -125, 125])
-fig1.savefig(ofname+'_uv5.png')
+fig1.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1.png')
 fig2=plt.figure()
 plt.imshow(uv.T,origin='lower')
-fig2.savefig(ofname+'_uv5_digi.png')
+fig2.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi.png')
 fig3=plt.figure()
 plt.imshow(np.real(dirty),cmap='afmhot',origin='lower')
-fig3.savefig(ofname+'_uv5_digi_realfft.png')
+fig3.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_realfft.png')
 fig4=plt.figure()
 plt.imshow(np.imag(dirty),cmap='afmhot',origin='lower')
-fig4.savefig(ofname+'_uv5_digi_imagfft.png')
+fig4.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_imagfft.png')
 fig5=plt.figure()
 plt.imshow(np.absolute(dirty),cmap='afmhot',origin='lower')
-fig5.savefig(ofname+'_uv5_digi_fft.png')
+fig5.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_fft.png')
 fig6=plt.figure()
 plt.imshow(np.real(dirty_i),cmap='afmhot',origin='lower')
-fig6.savefig(ofname+'_uv5_digi_realifft.png')
+fig6.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_realifft.png')
 fig7=plt.figure()
 plt.imshow(np.imag(dirty_i),cmap='afmhot',origin='lower')
-fig7.savefig(ofname+'_uv5_digi_imagifft.png')
+fig7.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_imagifft.png')
 fig8=plt.figure()
 plt.imshow(np.absolute(dirty_i),cmap='afmhot',origin='lower')
-fig8.savefig(ofname+'_uv5_digi_ifft.png')
+fig8.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_ifft.png')
 fig9=plt.figure()
 plt.imshow(np.real(dirty_c),cmap='afmhot',origin='lower')
-fig9.savefig(ofname+'_uv5_digi_c_realfft.png')
+fig9.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_c_realfft.png')
 fig10=plt.figure()
 plt.imshow(np.imag(dirty_c),cmap='afmhot',origin='lower')
-fig10.savefig(ofname+'_uv5_digi_c_imagfft.png')
+fig10.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_c_imagfft.png')
 fig11=plt.figure()
 plt.imshow(np.absolute(dirty_c),cmap='afmhot',origin='lower',clim=[0,800])
 plt.colorbar()
-fig11.savefig(ofname+'_uv5_digi_c_fft.pdf')
+fig11.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_c_fft.pdf')
 fig12=plt.figure()
 plt.imshow(np.real(dirty_i_c),cmap='afmhot',origin='lower')
-fig12.savefig(ofname+'_uv5_digi_c_realifft.png')
+fig12.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_c_realifft.png')
 fig13=plt.figure()
 plt.imshow(np.imag(dirty_i_c),cmap='afmhot',origin='lower')
-fig13.savefig(ofname+'_uv5_digi_c_imagifft.png')
+fig13.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_c_imagifft.png')
 fig14=plt.figure()
 plt.imshow(np.absolute(dirty_i_c),cmap='afmhot',origin='lower',clim=[0,0.005])
 plt.colorbar()
-fig14.savefig(ofname+'_uv5_digi_c_ifft.pdf')
+fig14.savefig(cwd+'/'+dirname+'/'+ofname+'_'+'_'.join(str_das_a)+'_uv5.1_digi_c_ifft.pdf')
 plt.show()
